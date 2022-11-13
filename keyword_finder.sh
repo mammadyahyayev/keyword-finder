@@ -11,12 +11,11 @@ function build_find_command() {
     local len=${#supported_file_formats[@]}
     command="find ./ -type f \(";
     for i in "${!supported_file_formats[@]}"; do 
+        command="${command} -iname \*.${supported_file_formats[$i]}"
         local result=`expr $len - 1`
         if [[ $i -ne result ]];
         then
-            command="${command} -iname \*.${supported_file_formats[$i]} -o"
-        else
-            command="${command} -iname \*.${supported_file_formats[$i]}"
+            command="${command} -o"
         fi
     done
 
