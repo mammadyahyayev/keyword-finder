@@ -3,10 +3,13 @@
 # option 1: search all the files in given directory 
 # (ex: ./keyword_finder.sh 'C:/Users/User/Desktop/data-science/AI and Deep Learning')
 
-# option 2: user can give some file names (will be build later)
+# COLORS
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+CYAN=$(tput setaf 6)
+NORMAL=$(tput sgr0)
 
-# TODO: colorize terminal outputs
-# TODO: write result into file
 
 supported_file_formats=("docx" "pdf")
 
@@ -16,6 +19,7 @@ txt_files=()
 
 # TODO: Replace path with relative path
 docx_to_txt_converter='C:/Users/User/Desktop/keyword-finder/docx2txt-1.4/docx2txt.sh'
+# docx_to_txt_converter='/docx2txt-1.4/docx2txt.sh'
 
 function build_find_command() {
     local len=${#supported_file_formats[@]}
@@ -80,15 +84,16 @@ function convert_docx_to_txt() {
 
 convert_docx_to_txt
 
-echo "***Exported Files***"
+
+echo "$GREEN***Exported Files***$NORMAL"
 for txt in "${txt_files[@]}"; do
-    echo "=> $txt"
+    echo "  $CYAN==>$NORMAL $txt"
 done
 
 echo $'\n***************************************************************\n'
 
-read -p "Enter your keywords and separate them with comma: " str_keywords
-echo "Keywords [$str_keywords]"
+read -p "Enter your keywords and separate them with comma: $YELLOW" str_keywords
+echo "$NORMAL Keywords: [$YELLOW $str_keywords $NORMAL]"
 echo $'\n' 
 
 IFS=',' read -r -a keywords_arr <<< "$str_keywords"
@@ -97,14 +102,13 @@ for i in "${!keywords_arr[@]}"; do
     keyword="${keywords_arr[$i]}"
     trimmed_keyword="${keyword//' '/''}"
     keywords+=($trimmed_keyword)
-    # echo "$trimmed_keyword - ${#trimmed_keyword}"
 done
 
 for key in "${keywords[@]}"; do 
-    echo "Keyword '$key' found in the following files:"
+    echo "Keyword $YELLOW'$key'$NORMAL found in the following files:"
     for file in "${txt_files[@]}"; do
-        if grep -q $key "$file"; then
-            echo "==> $file"
+        if grep -w -q $key "$file"; then
+            echo "  $CYAN==>$NORMAL $file"
         fi
     done
     echo $'\n\n\n'
