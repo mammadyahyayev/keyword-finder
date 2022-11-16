@@ -11,21 +11,20 @@ CYAN=$(tput setaf 6)
 NORMAL=$(tput sgr0)
 
 
-supported_file_formats=("docx" "pdf")
+SUPPORTED_FILE_FORMATS=("docx" "pdf")
 
 files=()
 keywords=()
 txt_files=()
 
-# TODO: Replace path with relative path
-docx_to_txt_converter='C:/Users/User/Desktop/keyword-finder/docx2txt-1.4/docx2txt.sh'
-# docx_to_txt_converter='/docx2txt-1.4/docx2txt.sh'
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DOCX_TO_TXT_CONVERTER_PATH="$SCRIPT_DIR/docx2txt-1.4/docx2txt.sh"
 
 function build_find_command() {
-    local len=${#supported_file_formats[@]}
+    local len=${#SUPPORTED_FILE_FORMATS[@]}
     command="find . -type f \(";
-    for i in "${!supported_file_formats[@]}"; do 
-        command="${command} -iname \*.${supported_file_formats[$i]}"
+    for i in "${!SUPPORTED_FILE_FORMATS[@]}"; do 
+        command="${command} -iname \*.${SUPPORTED_FILE_FORMATS[$i]}"
         local result=`expr $len - 1`
         if [[ $i -ne result ]];
         then
@@ -67,7 +66,7 @@ function convert_docx_to_txt() {
     for file in "${files[@]}"; do
         if [[ $file =~ $docx_regex ]]; then
             file_path="$directory_path/$file"
-            sh "$docx_to_txt_converter" "$file_path"
+            sh "$DOCX_TO_TXT_CONVERTER_PATH" "$file_path"
 
             txt_file="${file//'.docx'/'.txt'}"           
             txt_file_path="$directory_path/$txt_file"
@@ -93,8 +92,6 @@ done
 echo $'\n***************************************************************\n'
 
 read -p "Enter your keywords and separate them with comma: $YELLOW" str_keywords
-echo "$NORMAL Keywords: [$YELLOW $str_keywords $NORMAL]"
-echo $'\n' 
 
 IFS=',' read -r -a keywords_arr <<< "$str_keywords"
 
@@ -105,12 +102,12 @@ for i in "${!keywords_arr[@]}"; do
 done
 
 for key in "${keywords[@]}"; do 
-    echo "Keyword $YELLOW'$key'$NORMAL found in the following files:"
+    echo $NORMAL"Keyword $YELLOW'$key'$NORMAL found in the following files:"
     for file in "${txt_files[@]}"; do
         if grep -w -q $key "$file"; then
             echo "  $CYAN==>$NORMAL $file"
         fi
     done
-    echo $'\n\n\n'
+    echo $'\n\n'
 done
 
