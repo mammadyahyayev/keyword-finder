@@ -85,32 +85,28 @@ for txt in "${txt_files[@]}"; do
     echo "=> $txt"
 done
 
-# read -p "Enter your keywords and separate them with comma: " str_keywords
-# echo "Keywords [$str_keywords]"
-# echo $'\n' 
+echo $'\n***************************************************************\n'
 
-# IFS=',' read -r -a keywords_arr <<< "$str_keywords"
+read -p "Enter your keywords and separate them with comma: " str_keywords
+echo "Keywords [$str_keywords]"
+echo $'\n' 
 
-# for i in "${!keywords_arr[@]}"; do 
-#     keyword="${keywords_arr[$i]}"
-#     trimmed_keyword="${keyword//' '/''}"
-#     keywords+=($trimmed_keyword)
-#     # echo "$trimmed_keyword - ${#trimmed_keyword}"
-# done
+IFS=',' read -r -a keywords_arr <<< "$str_keywords"
 
-# echo "Keywords"
+for i in "${!keywords_arr[@]}"; do 
+    keyword="${keywords_arr[$i]}"
+    trimmed_keyword="${keyword//' '/''}"
+    keywords+=($trimmed_keyword)
+    # echo "$trimmed_keyword - ${#trimmed_keyword}"
+done
 
-# echo "${keywords[3]} - ${#keywords[3]}"
-
-# for key in "${keywords[@]}"; do 
-#     echo "Keyword '$key' found in the following files:"
-#     # for file in "${files[@]}"; do
-#     #     echo "=> $file"
-#     # done
-#     while IFS= read -r line; do
-#         echo "$line"
-#     done <$file
-
-#     echo $'\n'
-# done
+for key in "${keywords[@]}"; do 
+    echo "Keyword '$key' found in the following files:"
+    for file in "${txt_files[@]}"; do
+        if grep -q $key "$file"; then
+            echo "==> $file"
+        fi
+    done
+    echo $'\n\n\n'
+done
 
