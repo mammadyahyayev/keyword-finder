@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# option 1: search all the files in given directory 
-# (ex: ./keyword_finder.sh 'C:/Users/User/Desktop/data-science/AI and Deep Learning')
-
 # COLORS
 RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
@@ -35,11 +32,9 @@ function build_find_command() {
     command="${command} \) -printf '%f\n'";
 }
 
-# read given directory path from user, then navigate to the path
 directory_path=$1
 cd "$directory_path"
 
-# create export directory in given folder
 txt_exports_dir_path="$directory_path/__txt_exports__"
 if [[ ! -d $txt_exports_dir_path ]]; then
     eval $(mkdir '__txt_exports__')        
