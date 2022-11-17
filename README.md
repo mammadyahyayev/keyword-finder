@@ -5,6 +5,7 @@
 Keyword Finder script helps you to find keywords in the following files
 
 * docx
+* pdf
 
 ## Usage
 
