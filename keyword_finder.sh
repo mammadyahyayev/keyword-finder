@@ -54,43 +54,59 @@ function collect_given_directory_files() {
 
 collect_given_directory_files
 
+
 function convert_docx_to_txt() {
+    file_path="$directory_path/$file"
+    sh "$DOCX_TO_TXT_CONVERTER_PATH" "$file_path"
+    txt_file="${file//'.docx'/'.txt'}"
+}
+
+function convert_pdf_to_txt() {
+    file_path="$directory_path/$1"
+
+    txt_file="${1//'.pdf'/'.txt'}"
+    txt_file_path="$directory_path/$txt_file"
+    export_path="$txt_exports_dir_path/$txt_file"
+    
+    cd "$SCRIPT_DIR/pdf2text"
+    ./pdf2text $file_path > $txt_file_path
+}
+
+function convert_to_txt() {
     OIFS="$IFS"
     IFS=$'\n'
     docx_regex='\.docx$'
     pdf_regex='\.pdf$'
-    for file in "${files[@]}"; do
+
+    echo "Conversion started..."
+    converted_files=0
+    for i in "${!files[@]}"; do
+        file="${files[$i]}"
         file_path="$directory_path/$file"
         if [[ $file =~ $docx_regex ]]; then
-            sh "$DOCX_TO_TXT_CONVERTER_PATH" "$file_path"
-            txt_file="${file//'.docx'/'.txt'}"
-            txt_file_path="$directory_path/$txt_file"
-            export_path="$txt_exports_dir_path/$txt_file"
-            
-            if [[ -d $txt_exports_dir_path ]]; then
-                eval $(mv "$txt_file_path" "$export_path")
-            fi
-            txt_files+=($export_path)
+            convert_docx_to_txt $file
         elif [[ $file =~ $pdf_regex ]]; then
-            txt_file="${file//'.pdf'/'.txt'}"
-            txt_file_path="$directory_path/$txt_file"
-            export_path="$txt_exports_dir_path/$txt_file"
-            
-            cd "$SCRIPT_DIR/pdf2text"
-            ./pdf2text $file_path > $txt_file_path
-
-            if [[ -d $txt_exports_dir_path ]]; then
-                eval $(mv "$txt_file_path" "$export_path")
-            fi
-            txt_files+=($export_path)
+            convert_pdf_to_txt $file
         fi
+        
+        txt_file_path="$directory_path/$txt_file"
+        export_path="$txt_exports_dir_path/$txt_file"
+        
+        if [[ -d $txt_exports_dir_path ]]; then
+            eval $(mv "$txt_file_path" "$export_path")
+        fi
+        txt_files+=($export_path)
+        converted_files=`expr $converted_files + 1`
 
+        if [[ `expr $converted_files % 5` -eq 0 ]]; then
+           echo $YELLOW"$converted_files files already converted...$NORMAL";     
+        fi
     done
+    echo $GREEN"Total: $converted_files files converted$NORMAL"
     IFS="$OIFS"
 }
 
-convert_docx_to_txt
-
+convert_to_txt
 
 echo "$GREEN***Exported Files***$NORMAL"
 for txt in "${txt_files[@]}"; do
@@ -123,5 +139,5 @@ done
 # 1. Search For the pdf files, if there are already has pdf file with the same name, then don't generate simply 
 #    use it (same situation will be applied for docx files)
 
-# 2. Don't show the output of the pdf, just generate text file and store it __txt_exports__ folder
-# 3. Add progress, to show the user, there are 30 files, currently converting 7/30, and increase it after every conversion, show outputs with color 
+# 2. Add progress, to show the user, there are 30 files, currently converting 7/30, and increase it after every conversion, show outputs with color
+# 3. Remove output of the doc2txt.sh 
