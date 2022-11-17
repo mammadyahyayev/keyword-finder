@@ -58,12 +58,12 @@ function convert_docx_to_txt() {
     OIFS="$IFS"
     IFS=$'\n'
     docx_regex='\.docx$'
+    pdf_regex='\.pdf$'
     for file in "${files[@]}"; do
+        file_path="$directory_path/$file"
         if [[ $file =~ $docx_regex ]]; then
-            file_path="$directory_path/$file"
             sh "$DOCX_TO_TXT_CONVERTER_PATH" "$file_path"
-
-            txt_file="${file//'.docx'/'.txt'}"           
+            txt_file="${file//'.docx'/'.txt'}"
             txt_file_path="$directory_path/$txt_file"
             export_path="$txt_exports_dir_path/$txt_file"
             
@@ -71,7 +71,20 @@ function convert_docx_to_txt() {
                 eval $(mv "$txt_file_path" "$export_path")
             fi
             txt_files+=($export_path)
+        elif [[ $file =~ $pdf_regex ]]; then
+            txt_file="${file//'.pdf'/'.txt'}"
+            txt_file_path="$directory_path/$txt_file"
+            export_path="$txt_exports_dir_path/$txt_file"
+            
+            cd "$SCRIPT_DIR/pdf2text"
+            ./pdf2text $file_path > $txt_file_path
+
+            if [[ -d $txt_exports_dir_path ]]; then
+                eval $(mv "$txt_file_path" "$export_path")
+            fi
+            txt_files+=($export_path)
         fi
+
     done
     IFS="$OIFS"
 }
@@ -106,3 +119,9 @@ for key in "${keywords[@]}"; do
     echo $'\n\n'
 done
 
+# TODO List
+# 1. Search For the pdf files, if there are already has pdf file with the same name, then don't generate simply 
+#    use it (same situation will be applied for docx files)
+
+# 2. Don't show the output of the pdf, just generate text file and store it __txt_exports__ folder
+# 3. Add progress, to show the user, there are 30 files, currently converting 7/30, and increase it after every conversion, show outputs with color 
