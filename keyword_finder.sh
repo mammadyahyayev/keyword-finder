@@ -94,7 +94,7 @@ collect_given_directory_files
 
 function convert_docx_to_txt() {
     file_path="$directory_path/$file"
-    sh "$DOCX_TO_TXT_CONVERTER_PATH" "$file_path"
+    sh "$DOCX_TO_TXT_CONVERTER_PATH" "$file_path" >/dev/null
     txt_file="${file//'.docx'/'.txt'}"
 }
 
@@ -212,5 +212,4 @@ for key in "${keywords[@]}"; do
 done
 
 # TODO List
-# 2. Add progress, to show the user, there are 30 files, currently converting 7/30, and increase it after every conversion, show outputs with color
-# 3. Remove output of the doc2txt.sh
+# 1. Add progress, to show the user, there are 30 files, currently converting 7/30, and increase it after every conversion, show outputs with color
