@@ -5,6 +5,7 @@ RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
 YELLOW=$(tput setaf 3)
 CYAN=$(tput setaf 6)
+PURPLE=$(tput setaf 5)
 NORMAL=$(tput sgr0)
 
 
@@ -32,7 +33,43 @@ function build_find_command() {
     command="${command} \) -printf '%f\n'";
 }
 
+# Helper Log Functions
+function error() { 
+    echo $RED"Error: $1"$NORMAL 
+}
+
+function success() { 
+    echo $GREEN"$1"$NORMAL
+}
+
+function info() {
+    echo $CYAN"$1"$NORMAL 
+}
+
+function warning() { 
+    echo $YELLOW"$1"$NORMAL
+}
+
+function debug() { 
+    echo $PURPLE"==> $1"$NORMAL 
+}
+
+# Helper str functions
+function is_str_empty() {
+    if [[ -z "${1// }" ]]; then
+        true
+    else
+        false
+    fi
+}
+
+
 directory_path=$1
+if is_str_empty $directory_path; then
+ error "Please specify directory path where you want to search your files!"
+ exit;
+fi
+
 cd "$directory_path"
 
 txt_exports_dir_path="$directory_path/__txt_exports__"
@@ -99,15 +136,23 @@ function convert() {
     OIFS="$IFS"
     IFS=$'\n'
 
-    echo "Conversion started..."
+    info "Conversion started..."
     local converted_files=0
     local skipped_files=0
+
+    docx_regex='\.docx$'
+    pdf_regex='\.pdf$'
 
     for i in "${!files[@]}"; do
         file="${files[$i]}"
         file_path="$directory_path/$file"
 
-        txt_file=${file//'.docx'/'.txt'}
+        if [[ $file =~ $docx_regex ]]; then
+            txt_file=${file//'.docx'/'.txt'}
+        elif [[ $file =~ $pdf_regex ]]; then
+            txt_file=${file//'.pdf'/'.txt'}
+        fi
+
         exported_file_path="$txt_exports_dir_path/$txt_file"
         
         if [[ -e $exported_file_path ]]; then
@@ -119,19 +164,21 @@ function convert() {
             else
                 skipped_files=`expr $skipped_files + 1`
             fi
+            
         else
             convert_to_txt $file
+            converted_files=`expr $converted_files + 1`
         fi
 
         if [[ `expr $converted_files % 5` -eq 0 && $converted_files -ne 0 ]]; then
-            echo $YELLOW"$converted_files files already converted...$NORMAL";     
+            info "$converted_files files already converted..."
         fi
 
         txt_files+=($exported_file_path)
     done
     
-    echo $NORMAL $YELLOW"Total: $skipped_files files skipped$NORMAL"
-    echo $GREEN"Total: $converted_files files converted$NORMAL"
+    echo $NORMAL$YELLOW"Total: $skipped_files files skipped"$NORMAL
+    success "Total: $converted_files files converted"
     IFS="$OIFS"
 }
 
@@ -157,7 +204,7 @@ done
 for key in "${keywords[@]}"; do 
     echo $NORMAL"Keyword $YELLOW'$key'$NORMAL found in the following files:"
     for file in "${txt_files[@]}"; do
-        if grep -w -q $key "$file"; then
+        if grep -w -q -i $key "$file"; then
             echo "  $CYAN==>$NORMAL $file"
         fi
     done
@@ -165,9 +212,5 @@ for key in "${keywords[@]}"; do
 done
 
 # TODO List
-# 1. Search For the pdf files, if there are already has pdf file with the same name, then don't generate simply 
-#    use it (same situation will be applied for docx files)
-
 # 2. Add progress, to show the user, there are 30 files, currently converting 7/30, and increase it after every conversion, show outputs with color
 # 3. Remove output of the doc2txt.sh
-# 4, add resource of pdf2text converter to README file
