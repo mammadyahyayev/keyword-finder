@@ -33,3 +33,4 @@ If you find anything wrong, feel free to create an [issue](https://github.com/Ma
 ## Resources
 
 * [doc2txtconverter](https://docx2txt.sourceforge.net/)
+* [pdf2textconverter](https://www.pdftron.com/documentation/cli/guides/pdf2text/)
