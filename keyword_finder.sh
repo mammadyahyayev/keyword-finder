@@ -67,7 +67,7 @@ function convert_pdf_to_txt() {
     txt_file="${1//'.pdf'/'.txt'}"
     txt_file_path="$directory_path/$txt_file"
     export_path="$txt_exports_dir_path/$txt_file"
-    
+
     cd "$SCRIPT_DIR/pdf2text"
     ./pdf2text $file_path > $txt_file_path
 }
@@ -78,35 +78,64 @@ function convert_to_txt() {
     docx_regex='\.docx$'
     pdf_regex='\.pdf$'
 
+    local file=$1
+    if [[ $file =~ $docx_regex ]]; then
+        convert_docx_to_txt $file
+    elif [[ $file =~ $pdf_regex ]]; then
+        convert_pdf_to_txt $file
+    fi
+        
+    txt_file_path="$directory_path/$txt_file"
+    export_path="$txt_exports_dir_path/$txt_file"
+    
+    if [[ -d $txt_exports_dir_path ]]; then
+        eval $(mv "$txt_file_path" "$export_path")
+    fi
+
+    IFS="$OIFS"
+}
+
+function convert() {
+    OIFS="$IFS"
+    IFS=$'\n'
+
     echo "Conversion started..."
-    converted_files=0
+    local converted_files=0
+    local skipped_files=0
+
     for i in "${!files[@]}"; do
         file="${files[$i]}"
         file_path="$directory_path/$file"
-        if [[ $file =~ $docx_regex ]]; then
-            convert_docx_to_txt $file
-        elif [[ $file =~ $pdf_regex ]]; then
-            convert_pdf_to_txt $file
-        fi
-        
-        txt_file_path="$directory_path/$txt_file"
-        export_path="$txt_exports_dir_path/$txt_file"
-        
-        if [[ -d $txt_exports_dir_path ]]; then
-            eval $(mv "$txt_file_path" "$export_path")
-        fi
-        txt_files+=($export_path)
-        converted_files=`expr $converted_files + 1`
 
-        if [[ `expr $converted_files % 5` -eq 0 ]]; then
-           echo $YELLOW"$converted_files files already converted...$NORMAL";     
+        txt_file=${file//'.docx'/'.txt'}
+        exported_file_path="$txt_exports_dir_path/$txt_file"
+        
+        if [[ -e $exported_file_path ]]; then
+            read -p $YELLOW"$file already converted, do you want to override: Type y if you want to override, otherwise press enter:$NORMAL $GREEN" need_override
+
+            if [[ $need_override == 'y' ]]; then
+                convert_to_txt $file
+                converted_files=`expr $converted_files + 1`
+            else
+                skipped_files=`expr $skipped_files + 1`
+            fi
+        else
+            convert_to_txt $file
         fi
+
+        if [[ `expr $converted_files % 5` -eq 0 && $converted_files -ne 0 ]]; then
+            echo $YELLOW"$converted_files files already converted...$NORMAL";     
+        fi
+
+        txt_files+=($exported_file_path)
     done
+    
+    echo $NORMAL $YELLOW"Total: $skipped_files files skipped$NORMAL"
     echo $GREEN"Total: $converted_files files converted$NORMAL"
     IFS="$OIFS"
 }
 
-convert_to_txt
+convert
 
 echo "$GREEN***Exported Files***$NORMAL"
 for txt in "${txt_files[@]}"; do
@@ -140,4 +169,5 @@ done
 #    use it (same situation will be applied for docx files)
 
 # 2. Add progress, to show the user, there are 30 files, currently converting 7/30, and increase it after every conversion, show outputs with color
-# 3. Remove output of the doc2txt.sh 
+# 3. Remove output of the doc2txt.sh
+# 4, add resource of pdf2text converter to README file
