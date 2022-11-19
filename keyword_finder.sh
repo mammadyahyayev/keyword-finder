@@ -14,6 +14,7 @@ SUPPORTED_FILE_FORMATS=("docx" "pdf")
 files=()
 keywords=()
 txt_files=()
+declare -A file_map
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 DOCX_TO_TXT_CONVERTER_PATH="$SCRIPT_DIR/docx2txt-1.4/docx2txt.sh"
@@ -175,6 +176,7 @@ function convert() {
         fi
 
         txt_files+=($exported_file_path)
+        file_map+=([$exported_file_path]=$file_path)
     done
     
     echo $NORMAL$YELLOW"Total: $skipped_files files skipped"$NORMAL
@@ -185,7 +187,7 @@ function convert() {
 convert
 
 echo "$GREEN***Exported Files***$NORMAL"
-for txt in "${txt_files[@]}"; do
+for txt in "${!file_map[@]}"; do
     echo "  $CYAN==>$NORMAL $txt"
 done
 
@@ -203,13 +205,18 @@ done
 
 for key in "${keywords[@]}"; do 
     echo $NORMAL"Keyword $YELLOW'$key'$NORMAL found in the following files:"
-    for file in "${txt_files[@]}"; do
-        if grep -w -q -i $key "$file"; then
-            echo "  $CYAN==>$NORMAL $file"
+    for file in "${!file_map[@]}"; do
+        if grep -w -q -i $key "${file}"; then
+            echo "  $CYAN==>$NORMAL ${file_map[${file}]}"
         fi
     done
     echo $'\n\n'
 done
 
 # TODO List
-# 1. Add progress, to show the user, there are 30 files, currently converting 7/30, and increase it after every conversion, show outputs with color
+# 1. add some extra options
+    # -v print version of the project
+    # -h get help
+    # --ignore_override don't generate the file again and again 
+    # --override override all the files that are generated before
+    # -f give the files by seperating them with comma, to convert and search 
