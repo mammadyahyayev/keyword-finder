@@ -18,9 +18,22 @@ You can give directory that you want to search your files with this flag
 
 ```cmd
 sh keyword-finder.sh -d "C:/Users/User/Desktop/test"
+# or
+sh keyword-finder.sh --dir "C:/Users/User/Desktop/test"
 ```
 
 Keep in your mind that, path must be absolute. If given directory path, not exist you will get and **error message**.
+
+- **-sc** or **--skip-conversion**</br>
+This is a boolean flag, you don't need to give any value for this flag, just mention it on the script execution, it will
+skip conversion process. Conversion is a process that convert supported file formats into txt format to search keywords on
+the file. If you have already convert your files, you don't need to convert them again. This flag will save your time.
+
+```cmd
+sh keyword-finder.sh -d "C:/Users/User/Desktop/test" -sc
+# or
+sh keyword-finder.sh -d "C:/Users/User/Desktop/test" --skip-conversion
+```
 
 - **-v** or **--version**</br>
 
