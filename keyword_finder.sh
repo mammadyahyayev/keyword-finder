@@ -103,32 +103,13 @@ function print_dictionary() {
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 DOCX_TO_TXT_CONVERTER_PATH="$SCRIPT_DIR/docx2txt-1.4/docx2txt.sh" # TODO: rename folder
 
-
-function create_export_folder() {
-    local dir_path=$1
-    
-    if is_dir_exist $dir_path; then
-        cd "$dir_path"
-    fi
-
-    txt_exports_dir_path="$dir_path/__txt_exports__"
-    if [[ ! -d $txt_exports_dir_path ]]; then
-        eval $(mkdir '__txt_exports__')
-    fi
-}
-
-if $skip_conversion;
-then
-    create_export_folder $directory_path
-fi
-
 function build_find_command() {
     cd "$directory_path"
-
-    local len=${#SUPPORTED_FILE_FORMATS[@]}
+    local formats=("$@")
+    local len=${#formats[@]}
     command="find . -type f \("
-    for i in "${!SUPPORTED_FILE_FORMATS[@]}"; do
-        command="${command} -iname \*.${SUPPORTED_FILE_FORMATS[$i]}"
+    for i in "${!formats[@]}"; do
+        command="${command} -iname \*.${formats[$i]}"
         local result=$(expr $len - 1)
         if [[ $i -ne result ]]; then
             command="${command} -o"
@@ -139,157 +120,149 @@ function build_find_command() {
 }
 
 function collect_directory_files() {
-    build_find_command
+    temp_arr=()
+    local formats=("$@")
+    build_find_command "${formats[@]}"
 
     OIFS="$IFS"
     IFS=$'\n'
     for file in $(eval $command); do
-        files+=($file)
+        temp_arr+=("$file")
     done
     IFS="$OIFS"
 }
 
-# function collect_txt_files() {
-#     # check __txt_exports__ folder is exist
-#     # go to that folder
-#     # TODO: create map for files, key=filename, value=path 
+function collect_original_files() {
+    collect_directory_files "${SUPPORTED_FILE_FORMATS[@]}"
+    for file in "${temp_arr[@]}"; do
+        local file_path="$directory_path/$file" 
+        # debug "Original file: $file"
+        # debug "Original file path: $file_path"
+        files+=("$file_path")
+    done
+    temp_arr=()
+}
 
-#     OIFS="$IFS"
-#     IFS=$'\n'
-#     for file in $(eval $command); do
-#         files+=($file)
-#     done
-#     IFS="$OIFS"
-# }
+function collect_exported_files() {
+    if ! is_dir_exist "__txt_exports__"; then
+        error "exports folder doesn't exist"
+    fi
 
-# function convert_docx_to_txt() {
-#     file_path="$directory_path/$file"
-#     sh "$DOCX_TO_TXT_CONVERTER_PATH" "$file_path" >/dev/null
-#     txt_file="${file//'.docx'/'.txt'}"
-# }
+    local formats=("txt")
+    collect_directory_files "${formats[@]}"
 
-# function convert_pdf_to_txt() {
-#     file_path="$directory_path/$1"
+    for txt_file in "${temp_arr[@]}"; do
+        local txt_file_path="$directory_path/__txt_exports__/$txt_file"
+        # debug "Txt file: $txt_file"
+        # debug "Txt file path: $txt_file_path"
+        txt_files+=("$txt_file_path")
+    done
 
-#     txt_file="${1//'.pdf'/'.txt'}"
-#     txt_file_path="$directory_path/$txt_file"
-#     export_path="$txt_exports_dir_path/$txt_file"
+    temp_arr=()
+}
 
-#     cd "$SCRIPT_DIR/pdf2text"
-#     ./pdf2text $file_path >$txt_file_path
-# }
+function collect_matched_files() {
+    # debug "TXT FILES"
+    # print_arr "${txt_files[@]}"
 
-# function convert_to_txt() {
-#     OIFS="$IFS"
-#     IFS=$'\n'
-#     docx_regex='\.docx$'
-#     pdf_regex='\.pdf$'
+    # debug "FILES"
+    # print_arr "${files[@]}"
 
-#     local file=$1
-#     if [[ $file =~ $docx_regex ]]; then
-#         convert_docx_to_txt $file
-#     elif [[ $file =~ $pdf_regex ]]; then
-#         convert_pdf_to_txt $file
-#     fi
+    for txt_file in "${txt_files[@]}"; do
+        local txt_file_name=$(basename "${txt_file%.*}")
 
-#     txt_file_path="$directory_path/$txt_file"
-#     export_path="$txt_exports_dir_path/$txt_file"
+        for file in "${files[@]}"; do
+            local file_name=$(basename "${file%.*}")
 
-#     if [[ -d $txt_exports_dir_path ]]; then
-#         eval $(mv "$txt_file_path" "$export_path")
-#     fi
+            if [[ "$txt_file_name" = "$file_name" ]]; then
+                # debug "$txt_file_name <===> $file_name"
+                file_map[$txt_file]=$file
+            fi
+        done
+    done 
 
-#     IFS="$OIFS"
-# }
+    # for file in "${!file_map[@]}"; do
+    #     echo "  $CYAN==>$NORMAL Key=$file, Value=${file_map[${file}]}"
+    # done
+}
 
-# function convert() {
-#     OIFS="$IFS"
-#     IFS=$'\n'
+function show_collected_files() {
+    success "Collected files"
+    for file in "${files[@]}"; do
+        success "==> $file"
+    done
+    print_newline 1
+}
 
-#     info "Conversion started..."
-#     local converted_files=0
-#     local skipped_files=0
+function search_keywords() {
+    read -p "Enter your keywords and separate them with comma: $YELLOW" str_keywords
+    IFS=',' read -r -a keywords_arr <<<"$str_keywords"
 
-#     docx_regex='\.docx$'
-#     pdf_regex='\.pdf$'
+    for i in "${!keywords_arr[@]}"; do
+        keyword="${keywords_arr[$i]}"
+        trimmed_keyword="${keyword//' '/''}"
+        keywords+=($trimmed_keyword)
+    done
 
-#     for i in "${!files[@]}"; do
-#         file="${files[$i]}"
-#         file_path="$directory_path/$file"
+    for key in "${keywords[@]}"; do
+        echo $NORMAL"Keyword $YELLOW'$key'$NORMAL found in the following files:"
+        for file in "${!file_map[@]}"; do
+            if grep -w -q -i $key "${file}"; then
+                echo "  $CYAN==>$NORMAL ${file_map[${file}]}"
+            fi
+        done
+        print_newline 1
+    done
+}
 
-#         if [[ $file =~ $docx_regex ]]; then
-#             txt_file=${file//'.docx'/'.txt'}
-#         elif [[ $file =~ $pdf_regex ]]; then
-#             txt_file=${file//'.pdf'/'.txt'}
-#         fi
+function export_file() {
+    local file="$1"
+    local docx_regex='\.docx$'
+    local pdf_regex='\.pdf$'
+    local txt_file="$file"
 
-#         exported_file_path="$txt_exports_dir_path/$txt_file"
+    local txt_files_export_path="$directory_path/__txt_exports__"
 
-#         if [[ -e $exported_file_path ]]; then
-#             read -p $YELLOW"$file already converted, do you want to override: Type y if you want to override, otherwise press enter:$NORMAL $GREEN" need_override
+    if ! is_dir_exist "$txt_files_export_path"; then
+        mkdir "$txt_files_export_path"
+    fi
 
-#             if [[ $need_override == 'y' ]]; then
-#                 convert_to_txt $file
-#                 converted_files=$(expr $converted_files + 1)
-#             else
-#                 skipped_files=$(expr $skipped_files + 1)
-#             fi
+    if [[ $file =~ $docx_regex ]]; then
+        sh "$DOCX_TO_TXT_CONVERTER_PATH" "$file" >/dev/null
+        txt_file=${file//'.docx'/'.txt'}
+    elif [[ $file =~ $pdf_regex ]]; then
+        cd "$SCRIPT_DIR/pdf2text"
+        txt_file=${file//'.pdf'/'.txt'}
+        ./pdf2text "$file" > "$txt_file"
+    fi
 
-#         else
-#             convert_to_txt $file
-#             converted_files=$(expr $converted_files + 1)
-#         fi
+    mv "$txt_file" "$txt_files_export_path"
 
-#         if [[ $(expr $converted_files % 5) -eq 0 && $converted_files -ne 0 ]]; then
-#             info "$converted_files files already converted..."
-#         fi
+    local filename=${txt_file##*/}
+    file_map+=(["$txt_files_export_path/$filename"]=$file)
+}
 
-#         txt_files+=($exported_file_path)
-#         file_map+=([$exported_file_path]=$file_path)
-#     done
-
-#     echo $NORMAL$YELLOW"Total: $skipped_files files skipped"$NORMAL
-#     success "Total: $converted_files files converted"
-#     IFS="$OIFS"
-# }
-
-# convert
-
-# echo "$GREEN***Exported Files***$NORMAL"
-# for txt in "${!file_map[@]}"; do
-#     echo "  $CYAN==>$NORMAL $txt"
-# done
-
-# echo $'\n***************************************************************\n'
-
-# read -p "Enter your keywords and separate them with comma: $YELLOW" str_keywords
-
-# IFS=',' read -r -a keywords_arr <<<"$str_keywords"
-
-# for i in "${!keywords_arr[@]}"; do
-#     keyword="${keywords_arr[$i]}"
-#     trimmed_keyword="${keyword//' '/''}"
-#     keywords+=($trimmed_keyword)
-# done
-
-# for key in "${keywords[@]}"; do
-#     echo $NORMAL"Keyword $YELLOW'$key'$NORMAL found in the following files:"
-#     for file in "${!file_map[@]}"; do
-#         if grep -w -q -i $key "${file}"; then
-#             echo "  $CYAN==>$NORMAL ${file_map[${file}]}"
-#         fi
-#     done
-#     echo $'\n\n'
-# done
+function export_original_files() {
+    info "Files are preparing to convert..."
+    # Convert All files into appropriate txt file
+    for file in "${files[@]}"; do
+        export_file "$file"    
+    done
+}
 
 while :;  do
     case $1 in
     -v|--version)
         echo "keyword finder $KF_VERSION"
-        exit 1
+        exit 0
         ;;
     -h|--help)
         echo "For documentation refer to: $DOC_URL"
+        exit 0
+        ;;
+    -f|--file) 
+        fvalue="$OPTARG"
+        echo "Give file path to convert and search on it"
         exit 1
         ;;
     -d|--dir)
@@ -307,18 +280,36 @@ while :;  do
             exit 1
         fi
 
-        collect_directory_files
-        # collect_txt_files #TODO: create this function
-        ;;
-    -f|--file) 
-        fvalue="$OPTARG"
-        echo "Give file path to convert and search on it"
-        exit 1
-        ;;
-    -sc|--skip-conversion)
-        info "Conversion skipped, no files will be converted"
-        skip_conversion=true
-        # TODO: go immediately to searching
+        # debug $#
+        # debug "$1 $2 $3 $4"
+        for i in "$@"; do
+            # debug "$i"
+            case "$i" in
+                -sc|--skip-conversion)
+                    info "Conversion skipped, no files will be converted"
+                    skip_conversion=true
+                    shift
+                    ;;
+                -oa|--override-all)
+                    info "All files overrided"
+                    override_all=true
+                    shift
+                    ;;
+            esac
+        done
+
+        collect_original_files
+        
+        if $skip_conversion; then
+            collect_exported_files
+            collect_matched_files
+        else
+            export_original_files
+        fi
+
+        show_collected_files
+        search_keywords
+        exit 0
         ;;
     ?)
         echo "Unknown flag, plese type $YELLOW sh keyword-finder.sh -h$NORMAL for more info" >&2
@@ -328,12 +319,3 @@ while :;  do
 
     shift
 done
-
-
-# TODO List
-# --ignore_override don't generate the file again and again
-# --override override all the files that are generated before
-# -f give the files by seperating them with comma, to convert and search
-# skip conversion, skip searching
-# restrict access to pdf and docx converter folders, and don't allow user to delete, edit folder
-# restrict access to exported txt files, make them readonly, user can't change its location and names
