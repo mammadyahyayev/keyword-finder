@@ -19,10 +19,12 @@ SUPPORTED_FILE_FORMATS=("docx" "pdf")
 files=()
 keywords=()
 txt_files=()
+temp_arr=()
 declare -A file_map
 
 # Variables
 skip_conversion=false
+override_all=false
 
 # Helper Log Functions
 function error() {
@@ -54,6 +56,27 @@ function is_str_empty() {
     fi
 }
 
+function is_arr_empty() {
+    local arr=("$@")
+    local arr_len="${#arr[@]}"
+    # debug "Length: $arr_len"
+    # debug "Arr: $arr"
+    if [[ $arr_len -eq 0 ]]; then
+        true
+    else
+        false
+    fi
+}
+
+function print_newline() {
+    count=$1
+    i=0
+    while [[ i -lt $count ]]; do
+        echo $'\n'
+        i=$(( $i + 1 ))
+    done
+}
+
 function is_dir_exist() {
     if [[ -d "$1" ]];
     then
@@ -61,6 +84,20 @@ function is_dir_exist() {
     else
         false
     fi
+}
+
+function print_arr() {
+    for item in "$@"; do
+        debug "$item"
+    done
+}
+
+function print_dictionary() {
+    for file in "${!file_map[@]}"; do
+        if grep -w -q -i $key "${file}"; then
+            echo "  $CYAN==>$NORMAL ${file_map[${file}]}"
+        fi
+    done
 }
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
