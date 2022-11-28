@@ -1,0 +1,138 @@
+
+PDFTron PDF2Text V9.3080104.
+Copyright (c) 2001-2022 PDFTron Systems Inc., www.pdftron.com.
+
+You are running a DEMO version of PDF2Text.
+In the demo version, random words or pages will be replaced with the <DEMO> string.
+
+Usage: pdf2text [<options>] file...
+
+OPTIONS:
+
+  --file... arg                 A list of folders and/or file names to process.
+                                
+  -o [ --output ] arg           The folder used to store output files. By 
+                                default, the output will be displayed on 
+                                screen.
+                                
+  -a [ --pages ] arg (=-)       Specifies the list of pages to convert. By 
+                                default, all pages are converted.
+                                
+  -e [ --encoding ] arg (=UTF8) Output text encoding:
+                                 UTF8
+                                 UTF16
+                                The default output encoding is UTF8.
+                                
+  -f [ --format ] arg (=plain)  Output text formating:
+                                 plain
+                                 wordlist
+                                 textruns
+                                 xml
+                                The default output format is 'plain' text.
+                                
+  --noligatures                 Disables expanding of ligatures using a 
+                                predefined mapping. Default ligatures are: fi, 
+                                ff, fl, ffi, ffl, ch, cl, ct, ll, ss, fs, st, 
+                                oe, OE.
+                                
+  --nodehyphen                  Disables finding and removing hyphens that 
+                                split words across two lines. Hyphens are often
+                                used a the end of lines as an indicator that a 
+                                word spans two lines. Hyphen detection enables 
+                                removal of hyphen character and merging of text
+                                runs to form a single word. This option has no 
+                                effect on Tagged PDF files.
+                                
+  --no_dup_remove               Disables removing duplicated text that is 
+                                frequently used to achieve visual effects of 
+                                drop shadow and fake bold.
+                                
+  --punct_break                 Treat punctuation (e.g. full stop, comma, 
+                                semicolon, etc.) as word break characters.
+                                
+  --remove_hidden_text          Enables removal of text that is obscured by 
+                                images or rectangles. Since this option has 
+                                small performance penalty on performance of 
+                                text extraction, by default it is not enabled.
+                                
+  --no_invisible_text           Enables removing text that uses rendering mode 
+                                3 (i.e. invisible text). Invisible text is 
+                                usually used in 'PDF Searchable Images' (i.e. 
+                                scanned pages with a corresponding OCR text). 
+                                As a result, invisible text will be extracted 
+                                by default.
+                                
+  --use_z_order                 Use Z-order as reading order for text
+                                
+  --output_bbox                 Include bounding box information for each text 
+                                element. If the output format is 'XML' the 
+                                bounding box information will be stored in 
+                                'bbox' attribute. If the output format is 
+                                'wordlist' the coordinates of the bounding box 
+                                will precede the word.
+                                
+  --xml_words_as_elements       Output words as XML elements instead of inline 
+                                text.
+                                
+  --xml_output_styles           Include font and styling information.
+                                
+  --json_zones                  Load zoning information from JSON file
+                                
+  --wordcount                   Get the number of words on each page.
+                                
+  --charcount                   Get total number of characters on each page.
+                                
+  --pageinfo                    Get the width, height, media box, crop box, and
+                                page rotation for every page.
+                                
+  --prefix arg                  The prefix for output text files. The output 
+                                filename will be constructed by appending the 
+                                prefix string, the page number, and the 
+                                appropriate file extension (e.g. myprefix1.txt,
+                                myprefix2.xml, etc). The prefix option should 
+                                be used only for processing of individual 
+                                documents. By default, PDF filename will be 
+                                used as a prefix.
+                                
+  --digits arg                  The number of digits used in the page counter 
+                                portion of the output filename. By default, new
+                                digits are added as needed; however this 
+                                parameter could be used to format the page 
+                                counter field to a uniform width (e.g. 
+                                myfile0001.txt, myfile0002.txt, etc).
+                                
+  --subfolders                  Process all sub-directory for every directory 
+                                specified in the argument list. By default, 
+                                sub-directories are not processed.
+                                
+  -c [ --clip ] arg             User definable clip box. The default clip 
+                                region is crop box of the page.
+                                
+  --noprompt                    Disables any user input. By default, the 
+                                application will ask for a valid password if 
+                                the password is incorrect.
+                                
+  -p [ --pass ] arg             The password for secured PDF files. Not 
+                                required if the input document is not secured 
+                                using the 'open' password.
+                                
+  --extension arg (=.pdf)       The default file extension used to process PDF 
+                                documents. The default extension is ".pdf".
+                                
+  --verb arg (=1)               Set the opt.m_verbosity level to 'arg' (0-2).
+                                
+  -v [ --version ]              Print the version information.
+                                
+  -h [ --help ]                 Print a listing of available options.
+                                
+
+  --lic_key arg         PDFTron SDK license key. License keys can be passed 
+                        using this option or in a separate .lic file.
+                        
+
+Examples:
+  pdf2text my.pdf
+  pdf2text -o test_out/ex1 test/my.pdf
+  pdf2text --wordcount my.pdf
+  pdf2text -o test_out -a 1 -f xml --output_bbox my.pdf
+
