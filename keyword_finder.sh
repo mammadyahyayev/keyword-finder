@@ -29,6 +29,7 @@ file_dir_path=""
 # Variables
 skip_conversion=false
 override_all=false
+skip_search=false
 
 # Helper Log Functions
 function error() {
@@ -227,7 +228,6 @@ function search_keywords() {
     for key in "${keywords[@]}"; do
         echo $NORMAL"Keyword $YELLOW'$key'$NORMAL found in the following files:"
         for file in "${!file_map[@]}"; do
-            debug "$file"
             if grep -w -q -i $key "${file}"; then
                 echo "  $CYAN==>$NORMAL ${file_map[${file}]}"
             fi
@@ -364,13 +364,18 @@ while :;  do
             # debug "$i"
             case "$i" in
                 -sc|--skip-conversion)
-                    info "Conversion skipped, no files will be converted"
+                    info "Conversion process skipped, no files will be converted"
                     skip_conversion=true
                     shift
                     ;;
                 -oa|--override-all)
                     info "All files overrided"
                     override_all=true
+                    shift
+                    ;;
+                -ss|--skip-search)
+                    info "Searching process skipped."
+                    skip_search=true
                     shift
                     ;;
             esac
@@ -386,7 +391,10 @@ while :;  do
         fi
 
         show_collected_files
-        search_keywords
+
+        if ! $skip_search; then
+            search_keywords
+        fi
         exit 0
         ;;
     ?)
