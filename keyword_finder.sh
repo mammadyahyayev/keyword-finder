@@ -9,12 +9,17 @@ PURPLE=$(tput setaf 5)
 NORMAL=$(tput sgr0)
 
 # Version, KF stands for KeywordFinder
-KF_VERSION='1.0.1'
+KF_VERSION='v1.1.0'
 
 # Docs
-DOC_URL='https://github.com/MamedYahyayev/keyword-finder'
+DOC_URL='https://github.com/mammadyahyayev/keyword-finder'
 
+# constant variables
 SUPPORTED_FILE_FORMATS=("docx" "pdf")
+AUTHOR="Mammad Yahyayev"
+AUTHOR_DESC="I am a passionate developer and I love open source projects."
+AUTHOR_GITHUB_URL="https://github.com/mammadyahyayev"
+AUTHOR_LINKEDIN_URL="https://www.linkedin.com/in/mammad-yahyayev/"
 
 files=()
 keywords=()
@@ -22,11 +27,17 @@ txt_files=()
 temp_arr=()
 declare -A file_map
 
-# Variables
+# file variables
+filename=""
+file_extension=""
+file_dir_path=""
+
+# flag variables
 skip_conversion=false
 override_all=false
+skip_search=false
 
-# Helper Log Functions
+# log functions
 function error() {
     echo $RED"Error: $1"$NORMAL
 }
@@ -47,7 +58,7 @@ function debug() {
     echo $PURPLE"==> $1"$NORMAL
 }
 
-# Helper str functions
+# str functions
 function is_str_empty() {
     if [[ -z "${1// /}" ]]; then
         true
@@ -56,11 +67,11 @@ function is_str_empty() {
     fi
 }
 
+# array functions
 function is_arr_empty() {
     local arr=("$@")
     local arr_len="${#arr[@]}"
-    # debug "Length: $arr_len"
-    # debug "Arr: $arr"
+
     if [[ $arr_len -eq 0 ]]; then
         true
     else
@@ -68,15 +79,8 @@ function is_arr_empty() {
     fi
 }
 
-function print_newline() {
-    count=$1
-    i=0
-    while [[ i -lt $count ]]; do
-        echo $'\n'
-        i=$(( $i + 1 ))
-    done
-}
 
+# directory functions
 function is_dir_exist() {
     if [[ -d "$1" ]];
     then
@@ -84,6 +88,33 @@ function is_dir_exist() {
     else
         false
     fi
+}
+
+# file related functions
+function get_filename() {
+    local file=$1
+    filename=${file##*/}
+}
+
+function get_file_extension() {
+    local file=$1
+    get_filename "$file"
+    file_extension="${filename##*.}"
+}
+
+function get_file_path() {
+    local file=$1
+    file_dir_path="${file%/*}"
+}
+
+# print functions
+function print_newline() {
+    count=$1
+    i=0
+    while [[ i -lt $count ]]; do
+        echo $'\n'
+        i=$(( $i + 1 ))
+    done
 }
 
 function print_arr() {
@@ -107,6 +138,7 @@ function build_find_command() {
     cd "$directory_path"
     local formats=("$@")
     local len=${#formats[@]}
+
     command="find . -type f \("
     for i in "${!formats[@]}"; do
         command="${command} -iname \*.${formats[$i]}"
@@ -136,8 +168,6 @@ function collect_original_files() {
     collect_directory_files "${SUPPORTED_FILE_FORMATS[@]}"
     for file in "${temp_arr[@]}"; do
         local file_path="$directory_path/$file" 
-        # debug "Original file: $file"
-        # debug "Original file path: $file_path"
         files+=("$file_path")
     done
     temp_arr=()
@@ -145,7 +175,7 @@ function collect_original_files() {
 
 function collect_exported_files() {
     if ! is_dir_exist "__txt_exports__"; then
-        error "exports folder doesn't exist"
+        error "Exports folder doesn't exist"
     fi
 
     local formats=("txt")
@@ -153,8 +183,6 @@ function collect_exported_files() {
 
     for txt_file in "${temp_arr[@]}"; do
         local txt_file_path="$directory_path/__txt_exports__/$txt_file"
-        # debug "Txt file: $txt_file"
-        # debug "Txt file path: $txt_file_path"
         txt_files+=("$txt_file_path")
     done
 
@@ -162,12 +190,6 @@ function collect_exported_files() {
 }
 
 function collect_matched_files() {
-    # debug "TXT FILES"
-    # print_arr "${txt_files[@]}"
-
-    # debug "FILES"
-    # print_arr "${files[@]}"
-
     for txt_file in "${txt_files[@]}"; do
         local txt_file_name=$(basename "${txt_file%.*}")
 
@@ -175,15 +197,10 @@ function collect_matched_files() {
             local file_name=$(basename "${file%.*}")
 
             if [[ "$txt_file_name" = "$file_name" ]]; then
-                # debug "$txt_file_name <===> $file_name"
                 file_map[$txt_file]=$file
             fi
         done
     done 
-
-    # for file in "${!file_map[@]}"; do
-    #     echo "  $CYAN==>$NORMAL Key=$file, Value=${file_map[${file}]}"
-    # done
 }
 
 function show_collected_files() {
@@ -221,7 +238,8 @@ function export_file() {
     local pdf_regex='\.pdf$'
     local txt_file="$file"
 
-    local txt_files_export_path="$directory_path/__txt_exports__"
+    get_file_path "$file" # assign path to => file_dir_path variable
+    local txt_files_export_path="$file_dir_path/__txt_exports__"
 
     if ! is_dir_exist "$txt_files_export_path"; then
         mkdir "$txt_files_export_path"
@@ -244,9 +262,51 @@ function export_file() {
 
 function export_original_files() {
     info "Files are preparing to convert..."
-    # Convert All files into appropriate txt file
     for file in "${files[@]}"; do
         export_file "$file"    
+    done
+}
+
+function is_supported_file() {
+    local file=$1
+    local is_supported=false
+    get_file_extension $file # it get file_extension from the path and assign it to 'file_extension' variable
+    for formats in "${SUPPORTED_FILE_FORMATS[@]}"; do
+        if [[ "$file_extension" == "$formats" ]]; then
+            is_supported=true
+            break
+        fi
+    done
+
+    if $is_supported; then
+        true
+    else
+        false
+    fi
+}
+
+function print_supported_file_formats() {
+    local message=$GREEN"${SUPPORTED_FILE_FORMATS[@]}"$NORMAL
+    info "Please use one of these file formats: $message"
+}
+
+function search_keywords_on_file() {
+    read -p "Enter your keywords and separate them with comma: $YELLOW" str_keywords
+    IFS=',' read -r -a keywords_arr <<<"$str_keywords"
+
+    for i in "${!keywords_arr[@]}"; do
+        keyword="${keywords_arr[$i]}"
+        trimmed_keyword="${keyword//' '/''}"
+        keywords+=($trimmed_keyword)
+    done
+
+    for file in "${!file_map[@]}"; do
+        echo $NORMAL"File:$YELLOW'${file_map[${file}]}'$NORMAL has following keywords:"
+        for key in "${keywords[@]}"; do
+            if grep -w -q -i $key "${file}"; then
+                echo "  $CYAN==>$NORMAL $YELLOW $key $NORMAL"
+            fi
+        done
     done
 }
 
@@ -260,15 +320,35 @@ while :;  do
         echo "For documentation refer to: $DOC_URL"
         exit 0
         ;;
+    --author)
+        echo $GREEN"Developer:$NORMAL   $CYAN==>$NORMAL $AUTHOR"
+        echo $GREEN"Bio:$NORMAL         $CYAN==>$NORMAL $AUTHOR_DESC"
+        echo $GREEN"Github:$NORMAL      $CYAN==>$NORMAL $AUTHOR_GITHUB_URL"
+        echo $GREEN"Linkedin:$NORMAL    $CYAN==>$NORMAL $AUTHOR_LINKEDIN_URL"
+        exit 0
+        ;;
     -f|--file) 
-        fvalue="$OPTARG"
-        echo "Give file path to convert and search on it"
-        exit 1
+        fvalue="$2"
+        if is_str_empty $fvalue; then
+            error "Please specify file path where you want to search your keywords!"
+            exit 1
+        fi
+
+        if ! is_supported_file $fvalue; then
+            error "Unsupported file format"
+            print_supported_file_formats
+            exit 1
+        fi
+
+
+        export_file $fvalue
+        search_keywords_on_file
+        exit 0
         ;;
     -d|--dir)
         dvalue="$2"
         if is_str_empty $dvalue; then
-            error "Please specify directory path where you want to search your files!"
+            error "Please specify directory path where you want to search your keyword!"
             exit 1
         else
             directory_path=$dvalue
@@ -276,23 +356,25 @@ while :;  do
 
         if [ ! -d "$directory_path" ];
         then 
-            error "Given directory [ $directory_path ] not exist or incorrect"
+            error "Directory [ $directory_path ] not exist or incorrect"
             exit 1
         fi
 
-        # debug $#
-        # debug "$1 $2 $3 $4"
         for i in "$@"; do
-            # debug "$i"
             case "$i" in
                 -sc|--skip-conversion)
-                    info "Conversion skipped, no files will be converted"
+                    info "Conversion process skipped, no files will be converted"
                     skip_conversion=true
                     shift
                     ;;
                 -oa|--override-all)
-                    info "All files overrided"
+                    info "Files are overrided."
                     override_all=true
+                    shift
+                    ;;
+                -ss|--skip-search)
+                    info "Searching process skipped."
+                    skip_search=true
                     shift
                     ;;
             esac
@@ -308,11 +390,14 @@ while :;  do
         fi
 
         show_collected_files
-        search_keywords
+
+        if ! $skip_search; then
+            search_keywords
+        fi
         exit 0
         ;;
     ?)
-        echo "Unknown flag, plese type $YELLOW sh keyword-finder.sh -h$NORMAL for more info" >&2
+        error "Unknown flag, plese type $YELLOW sh keyword-finder.sh -h$NORMAL for more info" >&2
         exit 1
         ;;
     esac
