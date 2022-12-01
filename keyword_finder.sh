@@ -14,6 +14,7 @@ KF_VERSION='v1.1.0'
 # Docs
 DOC_URL='https://github.com/MamedYahyayev/keyword-finder'
 
+# constant variables
 SUPPORTED_FILE_FORMATS=("docx" "pdf")
 
 files=()
@@ -22,16 +23,17 @@ txt_files=()
 temp_arr=()
 declare -A file_map
 
+# file variables
 filename=""
 file_extension=""
 file_dir_path=""
 
-# Variables
+# flag variables
 skip_conversion=false
 override_all=false
 skip_search=false
 
-# Helper Log Functions
+# log functions
 function error() {
     echo $RED"Error: $1"$NORMAL
 }
@@ -52,7 +54,7 @@ function debug() {
     echo $PURPLE"==> $1"$NORMAL
 }
 
-# Helper str functions
+# str functions
 function is_str_empty() {
     if [[ -z "${1// /}" ]]; then
         true
@@ -61,11 +63,11 @@ function is_str_empty() {
     fi
 }
 
+# array functions
 function is_arr_empty() {
     local arr=("$@")
     local arr_len="${#arr[@]}"
-    # debug "Length: $arr_len"
-    # debug "Arr: $arr"
+
     if [[ $arr_len -eq 0 ]]; then
         true
     else
@@ -73,15 +75,8 @@ function is_arr_empty() {
     fi
 }
 
-function print_newline() {
-    count=$1
-    i=0
-    while [[ i -lt $count ]]; do
-        echo $'\n'
-        i=$(( $i + 1 ))
-    done
-}
 
+# directory functions
 function is_dir_exist() {
     if [[ -d "$1" ]];
     then
@@ -91,6 +86,7 @@ function is_dir_exist() {
     fi
 }
 
+# file related functions
 function get_filename() {
     local file=$1
     filename=${file##*/}
@@ -105,6 +101,16 @@ function get_file_extension() {
 function get_file_path() {
     local file=$1
     file_dir_path="${file%/*}"
+}
+
+# print functions
+function print_newline() {
+    count=$1
+    i=0
+    while [[ i -lt $count ]]; do
+        echo $'\n'
+        i=$(( $i + 1 ))
+    done
 }
 
 function print_arr() {
@@ -128,6 +134,7 @@ function build_find_command() {
     cd "$directory_path"
     local formats=("$@")
     local len=${#formats[@]}
+
     command="find . -type f \("
     for i in "${!formats[@]}"; do
         command="${command} -iname \*.${formats[$i]}"
@@ -157,8 +164,6 @@ function collect_original_files() {
     collect_directory_files "${SUPPORTED_FILE_FORMATS[@]}"
     for file in "${temp_arr[@]}"; do
         local file_path="$directory_path/$file" 
-        # debug "Original file: $file"
-        # debug "Original file path: $file_path"
         files+=("$file_path")
     done
     temp_arr=()
@@ -174,8 +179,6 @@ function collect_exported_files() {
 
     for txt_file in "${temp_arr[@]}"; do
         local txt_file_path="$directory_path/__txt_exports__/$txt_file"
-        # debug "Txt file: $txt_file"
-        # debug "Txt file path: $txt_file_path"
         txt_files+=("$txt_file_path")
     done
 
@@ -183,12 +186,6 @@ function collect_exported_files() {
 }
 
 function collect_matched_files() {
-    # debug "TXT FILES"
-    # print_arr "${txt_files[@]}"
-
-    # debug "FILES"
-    # print_arr "${files[@]}"
-
     for txt_file in "${txt_files[@]}"; do
         local txt_file_name=$(basename "${txt_file%.*}")
 
@@ -196,15 +193,10 @@ function collect_matched_files() {
             local file_name=$(basename "${file%.*}")
 
             if [[ "$txt_file_name" = "$file_name" ]]; then
-                # debug "$txt_file_name <===> $file_name"
                 file_map[$txt_file]=$file
             fi
         done
     done 
-
-    # for file in "${!file_map[@]}"; do
-    #     echo "  $CYAN==>$NORMAL Key=$file, Value=${file_map[${file}]}"
-    # done
 }
 
 function show_collected_files() {
@@ -262,7 +254,6 @@ function export_file() {
 
     local filename=${txt_file##*/}
     file_map+=(["$txt_files_export_path/$filename"]=$file)
-    # debug "$txt_files_export_path/$filename <==> $file"
 }
 
 function export_original_files() {
@@ -358,10 +349,7 @@ while :;  do
             exit 1
         fi
 
-        # debug $#
-        # debug "$1 $2 $3 $4"
         for i in "$@"; do
-            # debug "$i"
             case "$i" in
                 -sc|--skip-conversion)
                     info "Conversion process skipped, no files will be converted"
