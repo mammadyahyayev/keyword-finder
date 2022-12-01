@@ -12,10 +12,14 @@ NORMAL=$(tput sgr0)
 KF_VERSION='v1.1.0'
 
 # Docs
-DOC_URL='https://github.com/MamedYahyayev/keyword-finder'
+DOC_URL='https://github.com/mammadyahyayev/keyword-finder'
 
 # constant variables
 SUPPORTED_FILE_FORMATS=("docx" "pdf")
+AUTHOR="Mammad Yahyayev"
+AUTHOR_DESC="I am a passionate developer and I love open source projects."
+AUTHOR_GITHUB_URL="https://github.com/mammadyahyayev"
+AUTHOR_LINKEDIN_URL="https://www.linkedin.com/in/mammad-yahyayev/"
 
 files=()
 keywords=()
@@ -314,6 +318,13 @@ while :;  do
         ;;
     -h|--help)
         echo "For documentation refer to: $DOC_URL"
+        exit 0
+        ;;
+    --author)
+        echo $GREEN"Developer:$NORMAL   $CYAN==>$NORMAL $AUTHOR"
+        echo $GREEN"Bio:$NORMAL         $CYAN==>$NORMAL $AUTHOR_DESC"
+        echo $GREEN"Github:$NORMAL      $CYAN==>$NORMAL $AUTHOR_GITHUB_URL"
+        echo $GREEN"Linkedin:$NORMAL    $CYAN==>$NORMAL $AUTHOR_LINKEDIN_URL"
         exit 0
         ;;
     -f|--file) 
