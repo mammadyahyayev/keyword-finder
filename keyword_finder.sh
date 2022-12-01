@@ -9,7 +9,7 @@ PURPLE=$(tput setaf 5)
 NORMAL=$(tput sgr0)
 
 # Version, KF stands for KeywordFinder
-KF_VERSION='1.0.1'
+KF_VERSION='v1.1.0'
 
 # Docs
 DOC_URL='https://github.com/MamedYahyayev/keyword-finder'
@@ -21,6 +21,10 @@ keywords=()
 txt_files=()
 temp_arr=()
 declare -A file_map
+
+filename=""
+file_extension=""
+file_dir_path=""
 
 # Variables
 skip_conversion=false
@@ -84,6 +88,22 @@ function is_dir_exist() {
     else
         false
     fi
+}
+
+function get_filename() {
+    local file=$1
+    filename=${file##*/}
+}
+
+function get_file_extension() {
+    local file=$1
+    get_filename "$file"
+    file_extension="${filename##*.}"
+}
+
+function get_file_path() {
+    local file=$1
+    file_dir_path="${file%/*}"
 }
 
 function print_arr() {
@@ -207,6 +227,7 @@ function search_keywords() {
     for key in "${keywords[@]}"; do
         echo $NORMAL"Keyword $YELLOW'$key'$NORMAL found in the following files:"
         for file in "${!file_map[@]}"; do
+            debug "$file"
             if grep -w -q -i $key "${file}"; then
                 echo "  $CYAN==>$NORMAL ${file_map[${file}]}"
             fi
@@ -221,7 +242,8 @@ function export_file() {
     local pdf_regex='\.pdf$'
     local txt_file="$file"
 
-    local txt_files_export_path="$directory_path/__txt_exports__"
+    get_file_path "$file" # assign path to => file_dir_path variable
+    local txt_files_export_path="$file_dir_path/__txt_exports__"
 
     if ! is_dir_exist "$txt_files_export_path"; then
         mkdir "$txt_files_export_path"
@@ -240,13 +262,56 @@ function export_file() {
 
     local filename=${txt_file##*/}
     file_map+=(["$txt_files_export_path/$filename"]=$file)
+    # debug "$txt_files_export_path/$filename <==> $file"
 }
 
 function export_original_files() {
     info "Files are preparing to convert..."
-    # Convert All files into appropriate txt file
     for file in "${files[@]}"; do
         export_file "$file"    
+    done
+}
+
+function is_supported_file() {
+    local file=$1
+    local is_supported=false
+    get_file_extension $file # it get file_extension from the path and assign it to 'file_extension' variable
+    for formats in "${SUPPORTED_FILE_FORMATS[@]}"; do
+        if [[ "$file_extension" == "$formats" ]]; then
+            is_supported=true
+            break
+        fi
+    done
+
+    if $is_supported; then
+        true
+    else
+        false
+    fi
+}
+
+function print_supported_file_formats() {
+    local message=$GREEN"${SUPPORTED_FILE_FORMATS[@]}"$NORMAL
+    info "Please use one of these file formats: $message"
+}
+
+function search_keywords_on_file() {
+    read -p "Enter your keywords and separate them with comma: $YELLOW" str_keywords
+    IFS=',' read -r -a keywords_arr <<<"$str_keywords"
+
+    for i in "${!keywords_arr[@]}"; do
+        keyword="${keywords_arr[$i]}"
+        trimmed_keyword="${keyword//' '/''}"
+        keywords+=($trimmed_keyword)
+    done
+
+    for file in "${!file_map[@]}"; do
+        echo $NORMAL"File:$YELLOW'${file_map[${file}]}'$NORMAL has following keywords:"
+        for key in "${keywords[@]}"; do
+            if grep -w -q -i $key "${file}"; then
+                echo "  $CYAN==>$NORMAL $YELLOW $key $NORMAL"
+            fi
+        done
     done
 }
 
@@ -261,9 +326,22 @@ while :;  do
         exit 0
         ;;
     -f|--file) 
-        fvalue="$OPTARG"
-        echo "Give file path to convert and search on it"
-        exit 1
+        fvalue="$2"
+        if is_str_empty $fvalue; then
+            error "Please specify file path where you want to search your keywords!"
+            exit 1
+        fi
+
+        if ! is_supported_file $fvalue; then
+            error "Unsupported file format"
+            print_supported_file_formats
+            exit 1
+        fi
+
+
+        export_file $fvalue
+        search_keywords_on_file
+        exit 0
         ;;
     -d|--dir)
         dvalue="$2"
