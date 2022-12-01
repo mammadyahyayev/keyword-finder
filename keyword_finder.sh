@@ -171,7 +171,7 @@ function collect_original_files() {
 
 function collect_exported_files() {
     if ! is_dir_exist "__txt_exports__"; then
-        error "exports folder doesn't exist"
+        error "Exports folder doesn't exist"
     fi
 
     local formats=("txt")
@@ -337,7 +337,7 @@ while :;  do
     -d|--dir)
         dvalue="$2"
         if is_str_empty $dvalue; then
-            error "Please specify directory path where you want to search your files!"
+            error "Please specify directory path where you want to search your keyword!"
             exit 1
         else
             directory_path=$dvalue
@@ -345,7 +345,7 @@ while :;  do
 
         if [ ! -d "$directory_path" ];
         then 
-            error "Given directory [ $directory_path ] not exist or incorrect"
+            error "Directory [ $directory_path ] not exist or incorrect"
             exit 1
         fi
 
@@ -357,7 +357,7 @@ while :;  do
                     shift
                     ;;
                 -oa|--override-all)
-                    info "All files overrided"
+                    info "Files are overrided."
                     override_all=true
                     shift
                     ;;
@@ -386,7 +386,7 @@ while :;  do
         exit 0
         ;;
     ?)
-        echo "Unknown flag, plese type $YELLOW sh keyword-finder.sh -h$NORMAL for more info" >&2
+        error "Unknown flag, plese type $YELLOW sh keyword-finder.sh -h$NORMAL for more info" >&2
         exit 1
         ;;
     esac
