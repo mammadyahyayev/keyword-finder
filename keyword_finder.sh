@@ -9,7 +9,7 @@ PURPLE=$(tput setaf 5)
 NORMAL=$(tput sgr0)
 
 # Version, KF stands for KeywordFinder
-KF_VERSION='v1.1.0'
+KF_VERSION='v1.1.1'
 
 # Docs
 DOC_URL='https://github.com/mammadyahyayev/keyword-finder'
@@ -176,6 +176,7 @@ function collect_original_files() {
 function collect_exported_files() {
     if ! is_dir_exist "__txt_exports__"; then
         error "Exports folder doesn't exist"
+        exit 1
     fi
 
     local formats=("txt")
@@ -201,6 +202,26 @@ function collect_matched_files() {
             fi
         done
     done 
+}
+
+function collect_matched_file() {
+    local original_file=$1
+    local original_file_dir_path="${original_file%/*}"
+
+    directory_path="$original_file_dir_path"
+    cd $original_file_dir_path
+    collect_exported_files
+
+    for txt_file in "${txt_files[@]}"; do
+        local txt_file_name=$(basename "${txt_file%.*}")        
+        local file_name=$(basename "${original_file%.*}")
+
+        if [[ "$txt_file_name" = "$file_name" ]]; then
+            # debug "$txt_file => $txt_file_name <==> $file_name => $file"
+            file_map[$txt_file]="$original_file"
+            break
+        fi
+    done
 }
 
 function show_collected_files() {
@@ -340,9 +361,32 @@ while :;  do
             exit 1
         fi
 
+        for i in "$@"; do
+            case "$i" in
+                -sc|--skip-conversion)
+                    info "Conversion process skipped, file won't be converted"
+                    skip_conversion=true
+                    shift
+                    ;;
+                -ss|--skip-search)
+                    info "Searching process skipped."
+                    skip_search=true
+                    shift
+                    ;;
+            esac
+        done
 
-        export_file $fvalue
-        search_keywords_on_file
+        if $skip_conversion; then
+            collect_matched_file $fvalue
+        else
+            info "File is converting..."
+            export_file $fvalue
+            success "Conversion is done."
+        fi
+
+        if ! $skip_search; then
+            search_keywords_on_file
+        fi
         exit 0
         ;;
     -d|--dir)
