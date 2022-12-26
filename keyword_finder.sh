@@ -9,7 +9,7 @@ PURPLE=$(tput setaf 5)
 NORMAL=$(tput sgr0)
 
 # Version, KF stands for KeywordFinder
-KF_VERSION='v1.1.1'
+KF_VERSION='v1.1.2'
 
 # Docs
 DOC_URL='https://github.com/mammadyahyayev/keyword-finder'
@@ -36,6 +36,7 @@ file_dir_path=""
 skip_conversion=false
 override_all=false
 skip_search=false
+has_file_formats_given=false
 
 # log functions
 function error() {
@@ -165,7 +166,13 @@ function collect_directory_files() {
 }
 
 function collect_original_files() {
-    collect_directory_files "${SUPPORTED_FILE_FORMATS[@]}"
+    local file_formats=("$@")
+
+    if [[ ${#file_formats[@]} == 0 ]]; then
+        file_formats=("${SUPPORTED_FILE_FORMATS[@]}")
+    fi
+
+    collect_directory_files "${file_formats[@]}"
     for file in "${temp_arr[@]}"; do
         local file_path="$directory_path/$file" 
         files+=("$file_path")
@@ -331,6 +338,24 @@ function search_keywords_on_file() {
     done
 }
 
+function is_all_formats_supported() {
+    local file_formats=("$@")
+    for file_format in "${file_formats[@]}"; do
+        local is_supported=false
+        for formats in "${SUPPORTED_FILE_FORMATS[@]}"; do
+            if [[ "$file_format" == "$formats" ]]; then
+                is_supported=true    
+            fi
+        done
+
+        if ! $is_supported; then
+            error "Given file format '$file_format' is not supported!"
+            print_supported_file_formats
+            exit 1
+        fi
+    done
+}
+
 while :;  do
     case $1 in
     -v|--version)
@@ -421,12 +446,33 @@ while :;  do
                     skip_search=true
                     shift
                     ;;
+                --file-format)
+                    read -p "$CYAN Enter file formats and separate them with comma:$NORMAL $YELLOW" str_file_formats
+                    IFS=',' read -r -a file_formats_arr <<< "$str_file_formats"
+                    file_formats=()
+                    has_file_formats_given=true
+
+                    for i in "${!file_formats_arr[@]}"; do
+                        file_format="${file_formats_arr[$i]}"
+                        trimmed_file_formats="${file_format//' '/''}"
+                        file_formats+=($trimmed_file_formats)
+                    done
+
+                    is_all_formats_supported ${file_formats[@]} # check and exit if format not supported.
+
+                    shift
+                    ;;
             esac
         done
 
-        collect_original_files
-        
+        if $has_file_formats_given; then
+            collect_original_files ${file_formats[@]}
+        else
+            collect_original_files
+        fi
+
         if $skip_conversion; then
+            # TODO: this block takes too long to collect files, find another logic for this process
             collect_exported_files
             collect_matched_files
         else
