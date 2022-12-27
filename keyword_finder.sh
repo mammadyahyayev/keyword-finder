@@ -423,6 +423,8 @@ while :;  do
             directory_path=$dvalue
         fi
 
+        directory_path="${directory_path//'\'/'/'}"
+
         if [ ! -d "$directory_path" ];
         then 
             error "Directory [ $directory_path ] not exist or incorrect"
