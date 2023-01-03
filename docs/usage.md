@@ -13,6 +13,18 @@ cd keyword-finder
 
 ## Flags
 
+- **-f** or **--file**</br>
+This flag allow you to search multiple keywords in one file.
+
+```cmd
+sh keyword-finder.sh -f "C:/Users/User/Desktop/test/book.pdf"
+# or
+sh keyword-finder.sh --file "C:/Users/User/Desktop/test/book.pdf"
+```
+
+If the give file format not supported, it will throw an error.
+Please use **docx** or **pdf**
+
 - **-d** or **--dir**</br>
 You can give directory that you want to search your files with this flag
 
@@ -35,6 +47,27 @@ sh keyword-finder.sh -d "C:/Users/User/Desktop/test" -sc
 sh keyword-finder.sh -d "C:/Users/User/Desktop/test" --skip-conversion
 ```
 
+- **-ss** or **--skip-search**</br>
+This is a boolean flag, you don't need to give any value for this flag, just mention it on the script execution, it will
+skip search process. It is useful if you don't need to search right now.
+
+```cmd
+sh keyword-finder.sh -d "C:/Users/User/Desktop/test" -ss
+# or
+sh keyword-finder.sh -d "C:/Users/User/Desktop/test" --skip-search
+```
+
+- **--file-format**</br>
+This flag will ask you to enter the file format that you want to convert, for example,
+When you execute the following command, terminal will ask you to enter file formats.
+**Caution:** Only add supported file formats (*pdf*, *docx*).</br>
+If you type *docx*, then app will omit *pdf* files' conversion. That also allow you to deal
+only desired file formats.
+
+```cmd
+sh keyword-finder.sh -d "C:/Users/User/Desktop/test" --file-format
+```
+
 - **-v** or **--version**</br>
 
 As the name suggests the flag will print the version
@@ -46,7 +79,7 @@ sh keyword-finder.sh -v
 Result
 
 ```cmd
-keyword finder 1.0.1
+keyword finder 1.1.2
 ```
 
 - **-h** or **--help**</br>
