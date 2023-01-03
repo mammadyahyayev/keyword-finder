@@ -286,7 +286,7 @@ function export_original_files() {
 function is_supported_file() {
     local file=$1
     local is_supported=false
-    get_file_extension $file # it get file_extension from the path and assign it to 'file_extension' variable
+    get_file_extension "$file" # it get file_extension from the path and assign it to 'file_extension' variable
     for formats in "${SUPPORTED_FILE_FORMATS[@]}"; do
         if [[ "$file_extension" == "$formats" ]]; then
             is_supported=true
@@ -367,8 +367,7 @@ while :;  do
             error "Please specify file path where you want to search your keywords!"
             exit 1
         fi
-
-        if ! is_supported_file $fvalue; then
+        if ! is_supported_file "$fvalue"; then
             error "Unsupported file format"
             print_supported_file_formats
             exit 1
@@ -393,7 +392,7 @@ while :;  do
             collect_matched_file $fvalue
         else
             info "File is converting..."
-            export_file $fvalue
+            export_file "$fvalue"
             success "Conversion is done."
         fi
 
