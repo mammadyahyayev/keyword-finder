@@ -191,24 +191,12 @@ function collect_exported_files() {
 
     for txt_file in "${temp_arr[@]}"; do
         local txt_file_path="$directory_path/__txt_exports__/$txt_file"
+        local original_file_path="$directory_path/$txt_file"
         txt_files+=("$txt_file_path")
+        file_map[$txt_file_path]=$original_file_path
     done
 
     temp_arr=()
-}
-
-function collect_matched_files() {
-    for txt_file in "${txt_files[@]}"; do
-        local txt_file_name=$(basename "${txt_file%.*}")
-
-        for file in "${files[@]}"; do
-            local file_name=$(basename "${file%.*}")
-
-            if [[ "$txt_file_name" = "$file_name" ]]; then
-                file_map[$txt_file]=$file
-            fi
-        done
-    done 
 }
 
 function collect_matched_file() {
@@ -474,9 +462,7 @@ while :;  do
         fi
 
         if $skip_conversion; then
-            # TODO: this block takes too long to collect files, find another logic for this process
             collect_exported_files
-            collect_matched_files
         else
             export_original_files
         fi
