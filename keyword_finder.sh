@@ -9,7 +9,7 @@ PURPLE=$(tput setaf 5)
 NORMAL=$(tput sgr0)
 
 # Version, KF stands for KeywordFinder
-KF_VERSION='v1.1.2'
+KF_VERSION='v1.1.3'
 
 # Docs
 DOC_URL='https://github.com/mammadyahyayev/keyword-finder'
@@ -233,14 +233,14 @@ function search_keywords() {
 
     for i in "${!keywords_arr[@]}"; do
         keyword="${keywords_arr[$i]}"
-        trimmed_keyword="${keyword//' '/''}"
-        keywords+=($trimmed_keyword)
+        trimmed_keyword="$(echo -e "${keyword}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+        keywords+=("$trimmed_keyword")
     done
 
     for key in "${keywords[@]}"; do
         echo $NORMAL"Keyword $YELLOW'$key'$NORMAL found in the following files:"
         for file in "${!file_map[@]}"; do
-            if grep -w -q -i $key "${file}"; then
+            if grep -w -q -i "$key" "${file}"; then
                 echo "  $CYAN==>$NORMAL ${file_map[${file}]}"
             fi
         done
