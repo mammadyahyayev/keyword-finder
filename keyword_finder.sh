@@ -51,6 +51,10 @@ function info() {
     echo $CYAN"$1"$NORMAL
 }
 
+function info_override() {
+    echo -ne "$CYAN[INFO] $1\033[0K\r"$NORMAL
+}
+
 function warning() {
     echo $YELLOW"$1"$NORMAL
 }
@@ -278,9 +282,14 @@ function export_file() {
 
 function export_original_files() {
     info "Files are preparing to convert..."
+    local files_count="${#files[@]}"
+    local converted_files_count=0
     for file in "${files[@]}"; do
-        export_file "$file"    
+        export_file "$file"
+        converted_files_count=$(expr $converted_files_count + 1)
+        info_override "${converted_files_count}/${files_count} converting..."
     done
+    info "$files_count are converted..."
 }
 
 function is_supported_file() {
