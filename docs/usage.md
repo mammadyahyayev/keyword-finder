@@ -58,6 +58,7 @@ sh keyword-finder.sh -d "C:/Users/User/Desktop/test" --skip-search
 ```
 
 - **--file-format**</br>
+
 This flag will ask you to enter the file format that you want to convert, for example,
 When you execute the following command, terminal will ask you to enter file formats.
 **Caution:** Only add supported file formats (*pdf*, *docx*).</br>
@@ -66,6 +67,16 @@ only desired file formats.
 
 ```cmd
 sh keyword-finder.sh -d "C:/Users/User/Desktop/test" --file-format
+```
+
+- **-sfo** or **--show-filename-only**</br>
+  
+This flag will show only filenames, this flag is useful, when there are some long file path which take so much space on terminal.
+
+```cmd
+sh keyword-finder.sh -d "C:/Users/User/Desktop/test" -sfo
+or
+sh keyword-finder.sh -d "C:/Users/User/Desktop/test" -show-filename-only
 ```
 
 - **-v** or **--version**</br>

@@ -37,6 +37,7 @@ skip_conversion=false
 override_all=false
 skip_search=false
 has_file_formats_given=false
+show_filename_only=false
 
 # log functions
 function error() {
@@ -224,9 +225,15 @@ function collect_matched_file() {
 }
 
 function show_collected_files() {
-    success "Collected files"
+    local collected_file_count="${#files[@]}"
+    success "${collected_file_count} file(s) collected"
     for file in "${files[@]}"; do
-        success "==> $file"
+        if $show_filename_only; then
+            local filename=$(basename "$file")
+            success "==> $filename"
+        else
+            success "==> $file"
+        fi
     done
     print_newline 1
 }
@@ -245,7 +252,12 @@ function search_keywords() {
         echo $NORMAL"Keyword $YELLOW'$key'$NORMAL found in the following files:"
         for file in "${!file_map[@]}"; do
             if grep -w -q -i "$key" "${file}"; then
-                echo "  $CYAN==>$NORMAL ${file_map[${file}]}"
+                if $show_filename_only; then
+                    local filename=$(basename "${file_map[${file}]}")
+                    echo "  $CYAN==>$NORMAL $filename"
+                else
+                    echo "  $CYAN==>$NORMAL ${file_map[${file}]}"
+                fi
             fi
         done
         print_newline 1
@@ -461,6 +473,8 @@ while :;  do
 
                     shift
                     ;;
+                -sfo|--show-filename-only)
+                    show_filename_only=true
             esac
         done
 
