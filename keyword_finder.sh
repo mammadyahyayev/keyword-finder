@@ -275,6 +275,7 @@ function export_file() {
 
     if ! is_dir_exist "$txt_files_export_path"; then
         mkdir "$txt_files_export_path"
+        attrib +s +h "$txt_files_export_path"
     fi
 
     if [[ $file =~ $docx_regex ]]; then
