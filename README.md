@@ -1,11 +1,14 @@
 # Keyword Finder
+![keyword finder logo](./keyword_finder_logo.png)
 
 ## What is Keyword Finder
 
-Keyword Finder script helps you to find keywords in the following files
+Keyword Finder is a script helps you to find keywords in the following files.
 
 * **docx**
 * **pdf**
+
+With Keyword Finder, you don't need to open files individually to search keywords.
 
 ## Installation
 In order to install Keyword Finder, select [latest release](https://github.com/mammadyahyayev/keyword-finder/releases), download and unzip the file. Open the Keyword Finder folder as current working directory in your terminal.
