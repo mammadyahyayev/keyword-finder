@@ -6,6 +6,8 @@
   <source src="./resources/keyword-finder.mp4" type="video/mp4">
 </video>
 
+https://user-images.githubusercontent.com/66476643/232992114-6dcadb6d-6558-4af4-9431-066efd8f2908.mp4
+
 ## What is Keyword Finder
 
 Keyword Finder is a script helps you to find keywords in the following files.
