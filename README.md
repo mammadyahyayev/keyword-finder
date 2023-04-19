@@ -1,5 +1,10 @@
 # Keyword Finder
-![keyword finder logo](./keyword_finder_logo.png)
+
+![keyword finder logo](./resources/keyword_finder_logo.png)
+
+<video width="480" height="300" controls>
+  <source src="./resources/keyword-finder.mp4" type="video/mp4">
+</video>
 
 ## What is Keyword Finder
 
@@ -11,6 +16,7 @@ Keyword Finder is a script helps you to find keywords in the following files.
 With Keyword Finder, you don't need to open files individually to search keywords.
 
 ## Installation
+
 In order to install Keyword Finder, select [latest release](https://github.com/mammadyahyayev/keyword-finder/releases), download and unzip the file. Open the Keyword Finder folder as current working directory in your terminal.
 **Git Bash** is the best one. Installation is completed. For further information check out [documentation](https://mammadyahyayev.github.io/keyword-finder/#/usage).
 
